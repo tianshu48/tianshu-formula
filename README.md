@@ -1,11 +1,5 @@
 # tianshu-formula
 
-解析并求值一条公式。同一段源码、同一组变量，结果是同一个 `f64`。求值不读写文件，也不改调用方的环境。
-
-Parse an expression and evaluate it to `f64`. The result is determined by the source and the variable bindings.
-
-天枢桌面工作台用它算数值。这个仓库只有公式 crate：没有工作台、Play、节点图，也没有文档 IR。
-
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 安装
