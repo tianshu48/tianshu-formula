@@ -1,0 +1,27 @@
+[package]
+name = "tianshu-formula"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "Deterministic formula parser and evaluator (f64). No I/O, no side effects."
+repository = "https://github.com/tianshu48/tianshu-formula"
+homepage = "https://github.com/tianshu48"
+readme = "README.md"
+keywords = ["formula", "expression", "eval", "math"]
+categories = ["parser-implementations", "mathematics"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "macros"] }
+rustc-hash = "2"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+proptest = "1"
+
+[[bench]]
+name = "eval_bench"
+harness = false
