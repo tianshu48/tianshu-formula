@@ -1,23 +1,23 @@
 # tianshu-formula
 
-确定性公式解析与求值：同样的表达式和变量，永远得到同一个 `f64`。没有 I/O，没有副作用，不是脚本运行时。
+解析并求值一条公式。同一段源码、同一组变量，结果是同一个 `f64`。求值不读写文件，也不改调用方的环境。
 
-Deterministic formula parser and evaluator. Same source + same bindings → same `f64`. No I/O, no side effects.
+Parse an expression and evaluate it to `f64`. The result is determined by the source and the variable bindings.
 
-天枢桌面工作台用它算数值。**本仓库只有公式 crate**，不含工作台、Play、节点图或文档 IR。
+天枢桌面工作台用它算数值。这个仓库只有公式 crate：没有工作台、Play、节点图，也没有文档 IR。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Install
+## 安装
 
 ```toml
 [dependencies]
 tianshu-formula = { git = "https://github.com/tianshu48/tianshu-formula" }
 ```
 
-尚未发 crates.io。
+还没发 crates.io。
 
-## Usage
+## 用法
 
 ```rust
 use tianshu_formula::{Formula, MapContext};
@@ -31,42 +31,42 @@ fn main() -> Result<(), tianshu_formula::Error> {
 }
 ```
 
-热路径是同步 `eval`。`eval_async` / `eval_batch_async` 只是同一套求值的 async 包装。
+常用路径是同步 `eval`。`eval_async` 和 `eval_batch_async` 内部仍是同一套求值。
 
-## Not this
+## 范围
 
-| 不是 | 实际是 |
+| 容易当成 | 这里实际是 |
 |------|--------|
 | Excel / 电子表格 | 单行表达式，变量来自 `Context` |
 | 脚本语言（循环、赋值、I/O） | 纯表达式；求值不写环境 |
 | 天枢 Play / 节点图 | 只产出 `f64` |
 | 任意精度 / 十进制财务 | IEEE `f64` |
 
-`NaN`、除零、取模零都是 **错误**，不会静默变成 `NaN`。
+`NaN`、除零、取模零会返回错误，不会变成 `NaN` 继续算。
 
-## Language
+## 语言
 
-### Literals and names
+### 字面量和名字
 
 | 形式 | 例子 |
 |------|------|
 | 数字 | `42` `3.14` `.5` `1e-3` |
-| 变量 | `atk`；点号是**完整键名** `foo.bar`，不是字段访问 |
+| 变量 | `atk`；点号算完整键名（`foo.bar`），不是取字段 |
 | 常量 | `pi` `e` `tau` `inf` |
 
-### Operators (high → low)
+### 运算符（从高到低）
 
 1. atom：字面量、变量、`(…)`、`name(args…)`
 2. unary：`+` `-` `!`（非零为真）
 3. `^`（右结合）
 4. `* / %`
 5. `+ -`
-6. `< <= > >= == !=` → `1.0` / `0.0`
+6. `< <= > >= == !=` 结果为 `1.0` / `0.0`
 7. `&&`（短路）
 8. `||`（短路）
 9. `cond ? a : b`（短路，右结合）
 
-### Built-in functions
+### 内建函数
 
 `abs` `sign` `floor` `ceil` `round` `trunc` `fract`  
 `min` `max` `sum` `clamp`  
@@ -76,9 +76,9 @@ fn main() -> Result<(), tianshu_formula::Error> {
 `if` `select`  
 `lerp` `smoothstep` `step`
 
-内建名不能经 `Registry` 覆盖（解析期 `BuiltinOverride`）。函数表见 [`src/builtins.rs`](src/builtins.rs)。
+内建名不能经 `Registry` 覆盖，解析时是 `BuiltinOverride`。函数表见 [`src/builtins.rs`](src/builtins.rs)。
 
-AST 嵌套上限 [`MAX_AST_DEPTH`](src/lib.rs)（256）。超出为 `Parse`。
+AST 嵌套上限 [`MAX_AST_DEPTH`](src/lib.rs)（256）。超出返回 `Parse`。
 
 ## API
 
@@ -93,11 +93,11 @@ formula.eval_async(&ctx).await          // 包装 sync eval
 formula.eval_batch_async(&contexts).await
 ```
 
-`Formula` 可 `Serialize` / `Deserialize`（AST + `version`，当前 `FORMULA_VERSION = 1`）。
+`Formula` 可以 `Serialize` / `Deserialize`（AST 加 `version`，当前 `FORMULA_VERSION = 1`）。
 
-`Context` 自己实现即可；`MapContext` 是 HashMap 适配。
+可以自己实现 `Context`；`MapContext` 是 HashMap 适配。
 
-## Custom functions
+## 自定义函数
 
 ```rust
 use std::sync::Arc;
@@ -120,23 +120,23 @@ let f = Formula::parse_with("double(3)", Some(&reg))?;
 assert_eq!(f.eval_with(&MapContext::new(), Some(&reg))?, 6.0);
 ```
 
-自定义函数必须在 **parse 和 eval 时传入同一个 `Registry`**。只 parse 不传、eval 才传，会在 parse 时报 `UnknownFunction`。
+parse 和 eval 要传同一个 `Registry`。parse 时没传、只在 eval 时传，parse 会报 `UnknownFunction`。
 
-## Errors
+## 错误
 
 `Error.kind`：
 
 `EmptyInput` `Lex` `Parse` `UnknownFunction` `Arity` `UndefinedVariable` `DivByZero` `Domain` `Nan` `BuiltinOverride` `Custom`
 
-可选 `span`、`name`。
+`span` 和 `name` 是可选字段。
 
-## Develop
+## 开发
 
 ```bash
 cargo test
 cargo bench
 ```
 
-## License
+## 许可
 
 [MIT](LICENSE) © 天枢
